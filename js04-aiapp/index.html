@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>AI活用アプリ - テンプレート</title>
+    <!-- jQuery読み込み -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- axiosがこれで使えるようになっている -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- CSS読み込み -->
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+    <header>
+        <h1>AIチャットボット - テンプレート</h1>
+    </header>
+    <main>
+        <div id="response">
+            AIからの回答が表示されます
+        </div>
+        <textarea id="user-input" placeholder="メッセージを入力..."></textarea>
+        <ul>
+            <li id="send">送信</li>
+        </ul>
+    </main>
+
+<script type="module" src="js/script.js"></script>
+<!--HTML: 「よし、js/script.js を読み込むぞ」
+script.js: 「自分は module だから、他のファイルから APIキー（config.js）や Googleの道具箱（SDK）をインポートして合体させよう」AI解析中にエラーが発生しました。
+アプリ完成: 全てのパーツが script.js に集まり、ボタンが動くようになる  -->
+</body>
+
+</html>

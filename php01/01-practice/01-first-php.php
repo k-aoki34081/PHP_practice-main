@@ -1,0 +1,1 @@
+<!-- phpでechoを使ってHello PHP!を表示 -->

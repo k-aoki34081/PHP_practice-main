@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K-Next + | 統合分析プラットフォーム</title>
+    <!-- Tailwind CSS & Lucide Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto+Sans+JP', sans-serif; }
+        .sidebar-active { border-left: 4px solid #0070d2; background-color: #f3f4f6; font-weight: bold; color: #0070d2; }
+        .tab-active { border-bottom: 2px solid #1589ee; color: #1589ee; background-color: #ffffff; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-[#f4f6f9] text-[#3e3e3c] h-screen overflow-hidden flex">
+
+    <!-- 左サイドバー -->
+    <aside class="w-[200px] bg-white border-r border-[#d8dde6] flex flex-col shrink-0 z-20">
+        <div class="p-4 border-b">
+            <h1 class="text-xl font-black text-[#1589ee] italic">
+                K-Next <span class="not-italic text-xs bg-[#1589ee] text-white px-1 rounded ml-0.5">+</span>
+            </h1>
+            <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">Salesforce Analytics</p>
+        </div>
+        <nav class="flex-1 py-4 space-y-1">
+            <button class="w-full text-left px-4 py-2 text-xs flex items-center sidebar-active">
+                <i data-lucide="book-open" class="w-4 h-4 mr-3 opacity-60"></i> 書籍検索
+            </button>
+        </nav>
+        <div class="p-4 border-t bg-slate-50 flex items-center space-x-2 text-[10px] font-bold">
+            <div class="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xs border border-blue-200">青</div>
+            <div>
+                <p class="leading-tight text-slate-700">青木 太郎</p>
+                <p class="text-[8px] text-slate-400 font-normal tracking-tighter uppercase">Sales Executive</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- メインコンテンツ -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-[#1589ee] h-10 px-6 flex justify-between items-center text-white shadow-md z-10">
+            <div class="flex items-center space-x-3 text-xs font-bold">
+                <i data-lucide="layout" class="w-3.5 h-3.5"></i>
+                <span id="breadcrumb">宣伝 ＞ 書籍検索</span>
+            </div>
+            <div class="text-[9px] opacity-80 font-medium">K-Next+ v2.9 (Standalone HTML)</div>
+        </header>
+
+        <div id="content-area" class="flex-1 overflow-y-auto p-4 flex flex-col min-h-0 bg-[#f4f6f9]">
+            
+            <!-- 書籍検索画面 -->
+            <div id="view-search" class="space-y-4">
+                <h2 class="text-lg font-bold text-slate-800">書籍検索</h2>
+                <div class="bg-white border border-[#d8dde6] rounded p-5 shadow-sm">
+                    <div class="flex space-x-3">
+                        <div class="flex-1 relative">
+                            <i data-lucide="search" class="absolute left-3 top-2 w-4 h-4 text-slate-400"></i>
+                            <input type="text" class="w-full pl-10 pr-4 py-1.5 border rounded text-xs outline-none bg-slate-50 focus:ring-1 focus:ring-blue-400" placeholder="書名、ISBN、品目コードを入力..." />
+                        </div>
+                        <button class="bg-[#1589ee] text-white px-8 py-2 rounded text-xs font-bold hover:bg-[#0070d2]">検索実行</button>
+                    </div>
+                </div>
+
+                <div id="books-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- JSで描画 -->
+                </div>
+            </div>
+
+            <!-- 分析ワークシート -->
+            <div id="view-detail" class="hidden flex flex-col flex-1 min-h-0 space-y-4">
+                <div class="shrink-0 flex justify-between items-center">
+                    <button onclick="backToSearch()" class="text-[#1589ee] text-[11px] font-bold flex items-center hover:underline">
+                        <i data-lucide="arrow-left" class="w-4 h-4 mr-1.5"></i> 書籍検索に戻る
+                    </button>
+                </div>
+
+                <!-- 基本情報 -->
+                <div class="bg-white border border-[#d8dde6] rounded shadow-sm shrink-0">
+                    <div class="bg-[#f3f2f2] px-4 py-2 border-b border-[#d8dde6] font-bold text-[11px]">作品別シート：基本情報</div>
+                    <div class="p-4 grid grid-cols-4 gap-6 text-[10px]">
+                        <div><p class="text-slate-400 font-bold mb-1">書名</p><p id="detail-title" class="font-bold text-slate-800 text-[12px]"></p></div>
+                        <div><p class="text-slate-400 font-bold mb-1">属性</p><p id="detail-meta" class="font-medium text-slate-600 underline underline-offset-4"></p></div>
+                        <div><p class="text-slate-400 font-bold mb-1">品目コード</p><p id="detail-id" class="font-mono text-slate-600"></p></div>
+                        <div><p class="text-slate-400 font-bold mb-1">累計発行部数</p><p class="text-blue-600 font-black text-[12px]">489,000部 (12刷)</p></div>
+                    </div>
+                </div>
+
+                <!-- タブエリア -->
+                <div class="bg-white border border-[#d8dde6] rounded shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+                    <div class="flex border-b border-[#d8dde6] bg-slate-50 px-2 shrink-0">
+                        <button onclick="switchTab('analytics')" id="tab-analytics" class="px-6 py-3 text-[11px] font-bold flex items-center space-x-2 border-b-2 tab-active">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4"></i> <span>実績分析 (Trends同期)</span>
+                        </button>
+                        <button onclick="switchTab('register')" id="tab-register" class="px-6 py-3 text-[11px] font-bold flex items-center space-x-2 border-b-2 border-transparent text-slate-500">
+                            <i data-lucide="message-square" class="w-4 h-4"></i> <span>知見・仮説の登録</span>
+                        </button>
+                        <button onclick="switchTab('comparison')" id="tab-comparison" class="px-6 py-3 text-[11px] font-bold flex items-center space-x-2 border-b-2 border-transparent text-slate-500">
+                            <i data-lucide="brain" class="w-4 h-4"></i> <span>過去事例との比較分析</span>
+                        </button>
+                    </div>
+
+                    <div class="p-5 flex-1 overflow-y-auto min-h-0 scrollbar-hide">
+                        
+                        <!-- 1. 実績分析タブ -->
+                        <div id="pane-analytics" class="space-y-8 animate-in fade-in">
+                            <div class="h-[280px] bg-slate-50 border rounded-lg p-5 relative shadow-inner shrink-0">
+                                <div class="flex justify-between items-center mb-4 shrink-0 relative z-10">
+                                    <h4 class="text-[11px] font-bold text-slate-600 flex items-center">
+                                        <i data-lucide="trending-up" class="w-3.5 h-3.5 mr-2 text-blue-500"></i> 実売（POS）と市場関心（Trends）の同期推移
+                                    </h4>
+                                    <div class="flex items-center space-x-6 text-[9px] font-black uppercase tracking-widest">
+                                        <div class="flex items-center"><span class="w-2.5 h-2.5 bg-[#1589ee] rounded-full mr-2"></span> 日次POS</div>
+                                        <div class="flex items-center"><span class="w-2.5 h-2.5 bg-orange-400 rounded-full mr-2"></span> Google Trends</div>
+                                    </div>
+                                </div>
+                                <div class="h-[180px] w-full">
+                                    <canvas id="mainChart"></canvas>
+                                </div>
+                                <!-- 帯ラベル -->
+                                <div class="absolute top-[45px] left-[25%] bg-[#10b981] text-white text-[8px] px-2 py-0.5 rounded shadow-sm font-black flex items-center">
+                                    サンプリング施策
+                                </div>
+                                <div class="absolute top-[45px] left-[55%] bg-[#1589ee] text-white text-[8px] px-2 py-0.5 rounded shadow-sm font-black flex items-center">
+                                    夏休み・肝試しフェア
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-2 border-b border-slate-200 pb-1.5">
+                                    <div class="w-1 h-4 bg-blue-600"></div>
+                                    <h4 class="text-[11px] font-black text-slate-700 uppercase tracking-wider">登録済みの施策知見詳細</h4>
+                                </div>
+                                <div id="analytics-knowledge-list" class="flex flex-col space-y-5">
+                                    <!-- JS動的描画 -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. 知見登録タブ -->
+                        <div id="pane-register" class="hidden max-w-2xl mx-auto py-2">
+                            <div class="text-center border-b border-slate-100 pb-3 mb-6">
+                                <h4 class="text-md font-black text-slate-800 tracking-wider">施策知見・仮説の登録フォーム</h4>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6 text-[10px] font-bold">
+                                <div class="col-span-2">
+                                    <label class="text-slate-400 uppercase block mb-1">施策名 <span class="text-red-500">*</span></label>
+                                    <input type="text" class="w-full border rounded px-3 py-2.5 bg-slate-50 outline-none focus:ring-1 focus:ring-blue-400" placeholder="施策名称（最大50文字）">
+                                </div>
+                                <div><label class="text-slate-400 block mb-1">開始日</label><input type="date" class="w-full border rounded px-3 py-2 bg-white"></div>
+                                <div><label class="text-slate-400 block mb-1">終了日</label><input type="date" class="w-full border rounded px-3 py-2 bg-white"></div>
+                                <div><label class="text-slate-400 block mb-1">ジャンル</label><select class="w-full border rounded px-3 py-2 bg-slate-50"><option>読み物</option><option>図鑑</option></select></div>
+                                <div><label class="text-slate-400 block mb-1">ターゲット</label><select class="w-full border rounded px-3 py-2 bg-slate-50"><option>小学校低学年</option></select></div>
+                                <div class="col-span-2">
+                                    <label class="text-slate-400 uppercase block mb-1">独自の訴求軸：コア・フック</label>
+                                    <textarea class="w-full border rounded px-3 py-2 h-20 outline-none focus:ring-1 focus:ring-blue-500" placeholder="最も尖らせた切り口を入力"></textarea>
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="text-slate-400 uppercase block mb-1">施策に対する仮説</label>
+                                    <textarea class="w-full border rounded px-3 py-2 h-24 outline-none focus:ring-1 focus:ring-blue-500" placeholder="なぜ売れると考えたかの根拠"></textarea>
+                                </div>
+                                <button type="button" onclick="alert('知見を資産として保存しました')" class="col-span-2 bg-[#1589ee] text-white py-3.5 rounded font-black text-xs shadow-xl shadow-blue-100 hover:bg-[#0070d2] transition-all active:scale-[0.98]">知見を組織の資産として保存</button>
+                            </div>
+                        </div>
+
+                        <!-- 3. 比較分析タブ -->
+                        <div id="pane-comparison" class="hidden flex flex-col space-y-6 pb-8 animate-in slide-in-from-bottom">
+                            <!-- ①・② 検索・同期指定 -->
+                            <div class="bg-white border border-slate-200 p-5 rounded-lg shadow-sm">
+                                <div class="flex items-center space-x-2 mb-4 border-b pb-2">
+                                    <i data-lucide="brain" class="w-4 h-4 text-blue-600"></i>
+                                    <h4 class="text-[11px] font-black text-slate-800 uppercase tracking-widest">比較施策の検索・アルゴリズム同期</h4>
+                                </div>
+                                <div class="grid grid-cols-1 lg:grid-cols-6 gap-4 items-end text-[9px] font-bold">
+                                    <div class="space-y-1.5">
+                                        <label class="text-blue-600 uppercase tracking-tighter block">① 対象：宣伝施策</label>
+                                        <select class="w-full border rounded p-2 text-[10px] font-black bg-blue-50 border-blue-200 outline-none">
+                                            <option>夏休み・肝試しフェア</option>
+                                            <option>児童書サンプリング施策</option>
+                                        </select>
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        <label class="text-slate-400 uppercase block">② 検索対象</label>
+                                        <div class="flex bg-slate-100 p-1 rounded-md border">
+                                            <button class="flex-1 rounded py-1 bg-white text-blue-600 shadow-sm border border-slate-200">施策名</button>
+                                            <button class="flex-1 rounded py-1 text-slate-500">本から</button>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        <label class="text-slate-400 uppercase block">時期指定</label>
+                                        <div class="flex items-center space-x-1"><input type="date" class="w-full border rounded p-1.5 text-[8px]"><input type="date" class="w-full border rounded p-1.5 text-[8px]"></div>
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        <label class="text-slate-400 uppercase block">カテゴリ</label>
+                                        <div class="flex space-x-1"><select class="w-full border rounded p-1.5 text-[9px]"><option>読み物</option></select><select class="w-full border rounded p-1.5 text-[9px]"><option>低学年</option></select></div>
+                                    </div>
+                                    <div class="lg:col-span-2 space-y-1.5 flex space-x-2">
+                                        <div class="flex-1"><label class="text-slate-400 uppercase">キーワード検索</label><input type="text" class="w-full border rounded px-3 py-2 text-[10px] outline-none" placeholder="例：おしりたんてい..."></div>
+                                        <button class="bg-slate-800 text-white px-5 py-2 rounded text-[10px] font-black uppercase tracking-widest flex items-center h-[34px] self-end hover:bg-black transition-all">
+                                            <i data-lucide="calculator" class="w-3 h-3 mr-2"></i> 分析実行
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ③ 知見・演算エリア -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <!-- 左：レストランのおばけずかん -->
+                                <div class="bg-white border-2 border-[#1589ee] rounded-lg shadow-md flex flex-col relative overflow-hidden">
+                                    <div class="absolute top-0 right-0 bg-[#1589ee] text-white text-[8px] px-3 py-1 font-black uppercase tracking-widest italic rounded-bl">Current Plan</div>
+                                    <div class="bg-blue-50 px-4 py-2 border-b border-blue-100 flex flex-col">
+                                        <h5 class="text-[11px] font-black text-blue-800 uppercase">施策名：夏休み・肝試しフェア</h5>
+                                        <p class="text-[9px] font-bold text-blue-600 mt-0.5 underline">対象書目：レストランのおばけずかん むげんナポリタン</p>
+                                    </div>
+                                    <div class="p-4 space-y-5">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="bg-blue-50/50 border border-blue-100 p-3 rounded text-center">
+                                                <span class="text-[9px] font-black text-blue-500 block underline decoration-blue-200 uppercase">実売差分 (Sales Diff)</span>
+                                                <p class="text-lg font-black text-blue-800 tracking-tighter">+5,500<span class="text-[10px] ml-1">部</span></p>
+                                            </div>
+                                            <div class="bg-blue-50/50 border border-blue-100 p-3 rounded text-center">
+                                                <span class="text-[9px] font-black text-blue-500 block underline decoration-blue-200 uppercase tracking-tighter">CPA (効率評価)</span>
+                                                <p class="text-lg font-black text-blue-800">¥90.9</p>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-4 border-t pt-4">
+                                            <div>
+                                                <span class="text-[9px] font-black text-slate-400 block mb-1 uppercase tracking-widest">独自の訴求軸：コア・フック</span>
+                                                <p class="text-[11px] text-slate-800 font-black border-l-2 border-blue-500 pl-3">「宝探し」としての読書提案。受動から能動へのシフト。</p>
+                                            </div>
+                                            <div class="bg-slate-50 p-3 rounded border border-slate-100 shadow-inner">
+                                                <span class="text-[9px] font-black text-slate-400 block mb-2 uppercase tracking-widest">施策に対する仮説</span>
+                                                <p class="text-[10px] text-slate-600 leading-relaxed italic">Trends急上昇期と同期させた音と視覚のアイキャッチで、自発的な指名買いを誘発。</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- 右：おしりたんてい -->
+                                <div class="bg-white border border-dashed border-slate-300 rounded-lg shadow-sm flex flex-col relative overflow-hidden opacity-95">
+                                    <div class="absolute top-0 right-0 bg-slate-400 text-white text-[8px] px-3 py-1 font-black uppercase tracking-widest italic rounded-bl">Success Match</div>
+                                    <div class="bg-slate-50 px-4 py-2 border-b border-slate-100">
+                                        <h5 class="text-[11px] font-black text-slate-600 uppercase">施策名：博物館スタンプラリーフェア</h5>
+                                        <p class="text-[9px] font-bold text-slate-500 mt-0.5 underline">対象書目：おしりたんてい シリーズ</p>
+                                    </div>
+                                    <div class="p-4 space-y-5">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="bg-slate-50 border border-slate-100 p-3 rounded text-center">
+                                                <span class="text-[9px] font-black text-slate-400 block uppercase tracking-tighter">実売差分 (実績)</span>
+                                                <p class="text-lg font-black text-slate-700">+8,200<span class="text-[10px] ml-1">部</span></p>
+                                            </div>
+                                            <div class="bg-slate-50 border border-slate-100 p-3 rounded text-center">
+                                                <span class="text-[9px] font-black text-slate-400 block uppercase tracking-tighter">CPA (ランクS)</span>
+                                                <p class="text-lg font-black text-green-600">¥73.1</p>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-4 border-t pt-4">
+                                            <div>
+                                                <span class="text-[9px] font-black text-slate-400 block mb-1 uppercase tracking-widest">独自の訴求軸：コア・フック</span>
+                                                <p class="text-[11px] text-slate-600 font-black border-l-2 border-slate-300 pl-3 tracking-tight">親の「買い与え」より、子供自身の「謎解き体験」を主軸に設計。</p>
+                                            </div>
+                                            <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                                                <span class="text-[9px] font-black text-slate-400 block mb-2 uppercase tracking-widest">当時の施策仮説</span>
+                                                <p class="text-[10px] text-slate-500 leading-relaxed italic">「実物体験」と「本での謎解き」を往復させ、レジャー需要をダイレクトに読書に転換。</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 演算ダッシュボード -->
+                            <div class="bg-white border border-[#d8dde6] rounded-xl shadow-2xl overflow-hidden mt-2 shrink-0">
+                                <div class="bg-slate-900 text-white px-5 py-2.5 text-[11px] font-black flex justify-between items-center tracking-widest uppercase">
+                                    <span class="flex items-center"><i data-lucide="table" class="w-4 h-4 mr-3 text-blue-400"></i> 同期相関・効率性比較ダッシュボード</span>
+                                </div>
+                                <table class="w-full text-[10px] text-center border-collapse">
+                                    <thead class="bg-slate-100 text-slate-500 border-b border-slate-200">
+                                        <tr>
+                                            <th class="py-3 px-6 text-left w-1/4 border-r font-black uppercase">分析メトリクス</th>
+                                            <th class="py-3 px-6 border-r bg-blue-50 text-blue-700 font-black">【対象】おばけずかん</th>
+                                            <th class="py-3 px-6 border-r bg-slate-50 text-slate-600 font-black">【過去】おしりたんてい</th>
+                                            <th class="py-3 px-6 text-slate-900 font-black uppercase border-l">DXアルゴリズム判定</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        <tr>
+                                            <td class="py-3 px-6 text-left font-black text-slate-500 border-r flex items-center"><i data-lucide="target" class="w-3 h-3 mr-2 text-blue-500 opacity-60"></i> トレンド同期率 (Sync %)</td>
+                                            <td class="py-3 px-6 border-r bg-blue-50/30 font-black text-blue-600 text-sm">94.2%</td>
+                                            <td class="py-3 px-6 border-r font-black text-slate-500 text-sm">98.5%</td>
+                                            <td class="py-3 px-6 text-left italic text-slate-400 font-medium bg-slate-50/30 border-l">強い相関を検知。Day 1から3日以内に相関ピーク。再現性極大。</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="py-3 px-6 text-left font-black text-slate-500 border-r flex items-center"><i data-lucide="calculator" class="w-3 h-3 mr-2 text-green-500 opacity-60"></i> 予測CPA</td>
+                                            <td class="py-3 px-6 border-r bg-blue-50/30 font-black text-blue-600 text-sm">¥90.9</td>
+                                            <td class="py-3 px-6 border-r font-black text-slate-500 text-sm">¥73.1</td>
+                                            <td class="py-3 px-6 text-left text-green-600 font-black bg-slate-50/30 border-l flex items-center"><i data-lucide="arrow-right" class="w-3 h-3 mr-2"></i> 児童書平均(¥150)を凌駕。予算承認推奨。</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="bg-blue-600 text-white px-6 py-2.5 text-[11px] font-black text-center flex items-center justify-center space-x-3">
+                                    <i data-lucide="info" class="w-4 h-4 animate-pulse"></i>
+                                    <span>DXレポート：今回の「子供の主体性」案は「おしりたんてい」成功波形と94%一致。高確率ヒットを予測します。</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // データ定義 (元PHP変数をJSオブジェクトとして移植)
+        const masterBooks = [
+            { id: "1000656468", title: "レストランのおばけずかん むげんナポリタン", genre: "読み物", target: "小学校低学年", color: "blue" },
+            { id: "1000683502", title: "恐竜 新訂二版", genre: "図鑑", target: "全学年", color: "green" },
+            { id: "1000688498", title: "ちいかわ総復習ドリル 小学１年生", genre: "学習", target: "小学校低学年", color: "orange" }
+        ];
+
+        const masterCampaigns = [
+            {
+                name: "夏休み・肝試しフェア",
+                start: "2024-07-15",
+                end: "2024-07-25",
+                genre: "読み物",
+                target: "小学校低学年",
+                hook: "「怖いけど読みたい」という子供の根源的な好奇心を刺激する店頭POP訴求。音声QRコードでの物語読み上げ体験を付与。",
+                hypothesis: "能動的な選択が強まる夏休み中盤、Trends急上昇と同期させたアイキャッチで競合書との差別化と指名買い誘発を狙う。",
+                color: "blue"
+            },
+            {
+                name: "児童書サンプリング施策",
+                start: "2024-07-05",
+                end: "2024-07-12",
+                genre: "読み物",
+                target: "小学校中学年",
+                hook: "シリーズ最新刊の「立ち読み小冊子」配布。模試会場等のターゲット集中地点でのダイレクトな認知獲得を狙う。",
+                hypothesis: "模試会場等での配布により、ターゲット層へのダイレクトな認知獲得を狙う。",
+                color: "green"
+            }
+        ];
+
+        let chartInstance = null;
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSearchGrid();
+            lucide.createIcons();
+        });
+
+        // 検索グリッド描画
+        function renderSearchGrid() {
+            const grid = document.getElementById('books-grid');
+            grid.innerHTML = masterBooks.map(book => `
+                <div onclick="showDetail('${book.id}')" class="bg-white border border-[#d8dde6] p-4 rounded-lg hover:border-[#1589ee] hover:shadow-md cursor-pointer transition-all flex space-x-4 group">
+                    <div class="w-16 h-24 bg-${book.color}-50 rounded border border-${book.color}-100 flex items-center justify-center text-${book.color}-200 shrink-0">
+                        <i data-lucide="book-open" class="w-8 h-8"></i>
+                    </div>
+                    <div class="flex-1 min-w-0 flex flex-col justify-between py-1">
+                        <div>
+                            <p class="text-[9px] font-bold text-[#1589ee] tracking-widest uppercase mb-1">【${book.genre}】</p>
+                            <h3 class="font-bold text-[13px] text-slate-800 leading-tight group-hover:text-blue-600 truncate">${book.title}</h3>
+                            <p class="text-[10px] text-slate-400 mt-2 font-mono tracking-tighter">品目: ${book.id}</p>
+                        </div>
+                        <div class="flex justify-end items-center text-[10px] text-blue-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                            分析を開始 <i data-lucide="chevron-right" class="w-3.5 h-3.5 ml-1"></i>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // 詳細画面へ
+        function showDetail(bookId) {
+            const book = masterBooks.find(b => b.id === bookId);
+            document.getElementById('detail-title').innerText = book.title;
+            document.getElementById('detail-meta').innerText = `${book.genre} / ${book.target}`;
+            document.getElementById('detail-id').innerText = book.id;
+            document.getElementById('breadcrumb').innerText = `宣伝 ＞ 書籍検索 ＞ ${book.title}`;
+            
+            document.getElementById('view-search').classList.add('hidden');
+            document.getElementById('view-detail').classList.remove('hidden');
+            
+            renderAnalyticsKnowledge();
+            initChart();
+            switchTab('analytics');
+        }
+
+        // 検索画面へ戻る
+        function backToSearch() {
+            document.getElementById('view-search').classList.remove('hidden');
+            document.getElementById('view-detail').classList.add('hidden');
+            document.getElementById('breadcrumb').innerText = '宣伝 ＞ 書籍検索';
+        }
+
+        // タブ切り替え
+        function switchTab(tabId) {
+            ['analytics', 'register', 'comparison'].forEach(id => {
+                document.getElementById(`pane-${id}`).classList.add('hidden');
+                document.getElementById(`tab-${id}`).className = "px-6 py-3 text-[11px] font-bold flex items-center space-x-2 border-b-2 border-transparent text-slate-500";
+            });
+            document.getElementById(`pane-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).className = "px-6 py-3 text-[11px] font-bold flex items-center space-x-2 border-b-2 tab-active";
+        }
+
+        // 知見カード描画
+        function renderAnalyticsKnowledge() {
+            const list = document.getElementById('analytics-knowledge-list');
+            list.innerHTML = masterCampaigns.map((p, idx) => `
+                <div class="bg-white border border-slate-200 rounded shadow-sm overflow-hidden flex flex-col ${p.color==='blue'?'border-l-4 border-l-blue-600':'border-l-4 border-l-emerald-500 opacity-85'}">
+                    <div class="${p.color==='blue'?'bg-blue-50 text-blue-700':'bg-emerald-50 text-emerald-700'} px-4 py-2 border-b flex justify-between items-center">
+                        <span class="text-[10px] font-black uppercase tracking-wider">施策名：${p.name}</span>
+                        <span class="text-[9px] font-mono font-bold tracking-widest opacity-70">期間：${p.start} - ${p.end}</span>
+                    </div>
+                    <div class="grid grid-cols-12 text-[10px] leading-relaxed">
+                        <div class="col-span-2 p-4 border-r border-slate-100 bg-slate-50/30 flex flex-col space-y-4 text-center">
+                            <div><p class="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-1">【属性】</p><p class="font-black text-slate-700 bg-white px-2 py-1 border rounded shadow-xs">${p.genre} / ${p.target}</p></div>
+                        </div>
+                        <div class="col-span-5 p-4 border-r border-slate-100">
+                            <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2 flex items-center"><i data-lucide="target" class="w-3 h-3 mr-1.5"></i>独自の訴求軸（コア・フック）</p>
+                            <div class="p-3 bg-blue-50/10 rounded border border-blue-100 min-h-[60px] flex items-center">
+                                <p class="text-slate-800 font-bold italic leading-normal">「${p.hook}」</p>
+                            </div>
+                        </div>
+                        <div class="col-span-5 p-4 bg-white">
+                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center"><i data-lucide="brain" class="w-3 h-3 mr-1.5"></i>施策に対する仮説</p>
+                            <div class="p-3 bg-slate-50 rounded border border-slate-100 min-h-[60px] shadow-inner flex items-center">
+                                <p class="text-slate-600 leading-normal">${p.hypothesis}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // グラフ初期化
+        function initChart() {
+            if(chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            const labels = Array.from({length: 31}, (_, i) => `07/${String(i+1).padStart(2, '0')}`);
+            
+            // ダミーデータ生成
+            const posData = labels.map((_, i) => 20 + Math.floor(Math.random() * 20) + (i >= 14 && i <= 24 ? 65 : 0) + (i >= 4 && i <= 11 ? 30 : 0));
+            const trendData = labels.map((_, i) => 10 + Math.floor(Math.random() * 15) + (i >= 11 && i <= 21 ? 55 : 0) + (i >= 3 && i <= 10 ? 25 : 0));
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: '日次POS', data: posData, borderColor: '#1589ee', backgroundColor: 'rgba(21, 137, 238, 0.1)', fill: true, tension: 0.3, pointRadius: 2.5, yAxisID: 'y' },
+                        { label: 'Google Trends', data: trendData, borderColor: '#fb923c', borderDash: [5, 5], fill: false, tension: 0.3, pointRadius: 0, yAxisID: 'y1' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: { type: 'linear', position: 'left', ticks: { font: { size: 9 } } },
+                        y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 9 } } },
+                        x: { ticks: { font: { size: 8 } } }
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 10, titleFont: { size: 11 }, bodyFont: { size: 10 } }
+                    }
+                },
+                plugins: [{
+                    id: 'customAreas',
+                    beforeDraw: (chart) => {
+                        const {ctx, chartArea: {top, bottom, left, right}, scales: {x}} = chart;
+                        // 緑の帯 (サンプリング)
+                        ctx.fillStyle = 'rgba(16, 185, 129, 0.08)';
+                        ctx.fillRect(x.getPixelForValue('07/05'), top, x.getPixelForValue('07/12') - x.getPixelForValue('07/05'), bottom - top);
+                        // 青の帯 (肝試しフェア)
+                        ctx.fillStyle = 'rgba(21, 137, 238, 0.08)';
+                        ctx.fillRect(x.getPixelForValue('07/15'), top, x.getPixelForValue('07/25') - x.getPixelForValue('07/15'), bottom - top);
+                    }
+                }]
+            });
+        }
+    </script>
+</body>
+</html>

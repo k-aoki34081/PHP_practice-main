@@ -1,0 +1,35 @@
+/* Google Fonts の読み込み */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+
+/* 変数の定義（ここを直せばサイト全体の色が一気に変わるようになります） */
+:root {
+    --k-next-blue: #1589ee;
+    --k-next-blue-dark: #0070d2;
+    --k-next-bg: #f4f6f9;
+    --sidebar-active-bg: #f3f4f6;
+}
+
+/* 基本設定 */
+body { 
+    font-family: 'Noto+Sans+JP', sans-serif; 
+}
+
+/* サイドバーの活性状態 */
+.sidebar-active { 
+    border-left: 4px solid var(--k-next-blue-dark); 
+    background-color: var(--sidebar-active-bg); 
+    font-weight: bold; 
+    color: var(--k-next-blue-dark); 
+}
+
+/* タブの活性状態 */
+.tab-active { 
+    border-bottom: 2px solid var(--k-next-blue); 
+    color: var(--k-next-blue); 
+    background-color: #ffffff; 
+}
+
+/* スクロールバーを隠すユーティリティ */
+.scrollbar-hide::-webkit-scrollbar { 
+    display: none; 
+}

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHP課題：ユーザー管理 - PHP総復習</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'neutral',
+            flowchart: { 
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+    </script>
+    <style>
+        code {
+            background-color: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 0.875em;
+        }
+        pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+    <!-- ヘッダー -->
+    <header class="bg-slate-800 text-white py-8">
+        <div class="max-w-4xl mx-auto px-6">
+            <h1 class="text-3xl font-bold mb-2">PHP課題：ユーザー管理 - PHP総復習</h1>
+            <p class="text-slate-300">掲示板アプリを例に、CRUD + ログイン機能を実装する穴埋め課題</p>
+        </div>
+    </header>
+
+    <!-- 課題の概要 -->
+    <div class="max-w-4xl mx-auto px-6 py-6">
+        <div class="bg-white border-l-4 border-slate-400 rounded-lg border border-slate-200 p-6 shadow-sm">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="ml-4 flex-1">
+                    <h3 class="text-lg font-bold text-slate-900 mb-3">この課題の狙い</h3>
+                    <p class="text-slate-700 leading-relaxed">
+                        この課題では、<strong class="text-slate-900">ユーザーを管理する仕組み（新規登録・ログイン・ログアウト）</strong>を実装してもらいます。新規登録は授業では取り扱っていませんが、ログインとCreateの応用です。チャレンジしてみましょう！<br>
+                        また、PHP授業の総復習として、<strong class="text-slate-900">CRUD処理を完成</strong>させて、データベース操作の基礎をしっかりと身につけましょう！
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- メインコンテンツ -->
+    <main class="max-w-4xl mx-auto px-6 py-12">
+
+        <!-- 課題の目標 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 pb-2 border-b-2 border-slate-200">この課題で作るもの</h2>
+            <div class="bg-white rounded-lg border border-slate-200 p-6">
+                <p class="text-slate-700 leading-relaxed mb-4">
+                    この課題では、<strong>ログイン機能付きの簡易掲示板アプリ</strong>を完成させます。<br>
+                    php01〜php03で学んだ内容を活かして、穴埋め形式でコードを書いていきましょう。
+                </p>
+                <div class="grid md:grid-cols-2 gap-4 mt-6">
+                    <div class="bg-slate-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-slate-900 mb-2">認証機能</h4>
+                        <ul class="text-sm text-slate-600 space-y-1">
+                            <li>・ユーザー登録</li>
+                            <li>・ログイン / ログアウト</li>
+                            <li>・セッション管理</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-slate-900 mb-2">CRUD機能</h4>
+                        <ul class="text-sm text-slate-600 space-y-1">
+                            <li>・<strong>C</strong>reate: 投稿の作成</li>
+                            <li>・<strong>R</strong>ead: 投稿の一覧表示</li>
+                            <li>・<strong>U</strong>pdate: 投稿の編集</li>
+                            <li>・<strong>D</strong>elete: 投稿の削除</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- システム全体像 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 pb-2 border-b-2 border-slate-200">システム全体像</h2>
+            <div class="bg-white rounded-lg border border-slate-200 p-6">
+                <p class="text-slate-600 mb-6">完成すると、以下のような画面遷移で動作するアプリになります。</p>
+                
+                <div class="mermaid">
+flowchart TB
+    subgraph auth [認証エリア]
+        LOGIN[login.php<br/>ログイン画面]
+        LOGIN_ACT[login_act.php<br/>認証処理]
+        REGISTER[register.php<br/>新規登録画面]
+        REGISTER_ACT[register_act.php<br/>登録処理]
+        LOGOUT[logout.php<br/>ログアウト]
+    end
+    
+    subgraph main [メインエリア - 要ログイン]
+        INDEX[index.php<br/>投稿一覧]
+        CREATE[create.php<br/>新規投稿画面]
+        CREATE_ACT[create_act.php<br/>投稿処理]
+        EDIT[edit.php<br/>編集画面]
+        UPDATE_ACT[update_act.php<br/>更新処理]
+        DELETE[delete.php<br/>削除処理]
+    end
+    
+    LOGIN -->|フォーム送信| LOGIN_ACT
+    LOGIN_ACT -->|成功| INDEX
+    LOGIN_ACT -->|失敗| LOGIN
+    
+    REGISTER -->|フォーム送信| REGISTER_ACT
+    REGISTER_ACT -->|成功| LOGIN
+    LOGIN <-->|リンク| REGISTER
+    
+    INDEX -->|新規投稿| CREATE
+    CREATE -->|フォーム送信| CREATE_ACT
+    CREATE_ACT --> INDEX
+    
+    INDEX -->|編集| EDIT
+    EDIT -->|フォーム送信| UPDATE_ACT
+    UPDATE_ACT --> INDEX
+    
+    INDEX -->|削除| DELETE
+    DELETE --> INDEX
+    
+    INDEX -->|ログアウト| LOGOUT
+    LOGOUT --> LOGIN
+                </div>
+            </div>
+        </section>
+
+        <!-- データベース構成 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 pb-2 border-b-2 border-slate-200">データベース構成</h2>
+            <div class="bg-white rounded-lg border border-slate-200 p-6">
+                <p class="text-slate-600 mb-6">2つのテーブルを使用します。</p>
+                
+                <div class="mermaid">
+erDiagram
+    users ||--o{ posts : "1人が複数投稿"
+    users {
+        int id PK "主キー"
+        varchar name "ユーザー名"
+        varchar email "メールアドレス"
+        varchar password "パスワード（ハッシュ）"
+        datetime created_at "登録日時"
+    }
+    posts {
+        int id PK "主キー"
+        int user_id FK "投稿者ID"
+        text content "投稿内容"
+        datetime created_at "投稿日時"
+    }
+                </div>
+            </div>
+        </section>
+
+        <!-- セットアップ -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 pb-2 border-b-2 border-slate-200">事前準備</h2>
+            <div class="bg-white rounded-lg border border-slate-200 p-6">
+                <div class="space-y-6">
+                    <div class="flex items-start">
+                        <span class="bg-slate-800 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-4 flex-shrink-0">1</span>
+                        <div>
+                            <h4 class="font-semibold text-slate-900 mb-2">ファイルの配置</h4>
+                            <p class="text-slate-600">このフォルダを XAMPP/MAMP の <code>htdocs</code> 直下に配置</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="bg-slate-800 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-4 flex-shrink-0">2</span>
+                        <div>
+                            <h4 class="font-semibold text-slate-900 mb-2">データベースの作成</h4>
+                            <p class="text-slate-600">phpMyAdmin → 「SQL」タブ → <code>SQL/board_setup.sql</code> の内容を実行</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="bg-slate-800 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-4 flex-shrink-0">3</span>
+                        <div>
+                            <h4 class="font-semibold text-slate-900 mb-2">ブラウザでアクセス</h4>
+                            <div class="bg-slate-100 rounded-lg p-3 mt-2">
+                                <code class="text-slate-800">http://localhost/php_kadai/login.php</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 進め方ガイド -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 pb-2 border-b-2 border-slate-200">課題の進め方</h2>
+            <div class="bg-white rounded-lg border border-slate-200 p-6 mb-6">
+                <p class="text-slate-700 mb-4">
+                    以下の順番で穴埋めを進めていきましょう。<br>
+                    <strong>まずログイン機能を完成させ、その後でCRUD機能を1つずつ実装</strong>していきます。
+                </p>
+                <div class="mermaid">
+flowchart LR
+    S1[Step 1<br/>ログイン機能] --> S2[Step 2<br/>ユーザー登録]
+    S2 --> S3[Step 3<br/>一覧表示 R]
+    S3 --> S4[Step 4<br/>新規投稿 C]
+    S4 --> S5[Step 5<br/>編集 U]
+    S5 --> S6[Step 6<br/>削除 D]
+                </div>
+            </div>
+
+            <!-- Step 1: ログイン機能 -->
+            <div class="bg-white rounded-lg border-2 border-slate-300 p-6 mb-6">
+                <div class="flex items-center mb-4">
+                    <span class="bg-slate-800 text-white px-3 py-1 rounded-full text-sm font-bold mr-3">Step 1</span>
+                    <h3 class="text-xl font-bold text-slate-900">ログイン機能を完成させる</h3>
+                </div>
+                <p class="text-slate-600 mb-4">
+                    まずはログインできるようにします。これが動かないと他の機能も動きません。
+                </p>
+                
+                <div class="space-y-4">
+                    <!-- login_act.php の処理フロー -->
+                    <div class="bg-slate-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-slate-900 mb-2">1-1. <code>login_act.php</code> を編集</h4>
+                        <p class="text-sm text-slate-600 mb-3">ログイン処理の流れ:</p>
+                        <div class="mermaid">
+flowchart LR
+    A[login.php] -->|POST送信| B[login_act.php]
+    B -->|成功| C[index.php]
+    B -->|失敗| A
+                        </div>
+                        <ul class="text-sm text-slate-700 space-y-1 ml-4 mt-3">
+                            <li>□ SELECT文でユーザーを検索（※php03と違い、カラム名は<code>email</code>です！）</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-slate-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-slate-900 mb-2">1-2. <code>funcs.php</code> の <code>sschk()</code> を編集</h4>
+                        <p class="text-sm text-slate-600 mb-2">ログイン状態をチェックする関数です。php03のfuncs.phpを見ながら書き写してみよう。</p>
+                        <ul class="text-sm text-slate-700 space-y-1 ml-4">
+                            <li>□ php03のsschk()を参考に書き写す</li>
+                            <li>□ この関数が何をしているか理解する</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p class="text-sm text-green-800">
+                        <strong>確認方法:</strong> テストアカウント（<code>test@example.com</code> / <code>test123</code>）でログイン → 「ログイン成功！index.php まで到達しました」と表示されればOK!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 2: ユーザー登録 -->
+            <div class="bg-white rounded-lg border border-slate-200 p-6 mb-6">
+                <div class="flex items-center mb-4">
+                    <span class="bg-slate-800 text-white px-3 py-1 rounded-full text-sm font-bold mr-3">Step 2</span>
+                    <h3 class="text-xl font-bold text-slate-900">ユーザー登録機能を完成させる</h3>
+                </div>
+                <p class="text-slate-600 mb-4">新しいユーザーを登録できるようにします。</p>
+                
+                <!-- register_act.php の処理フロー -->
+                <div class="bg-slate-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-slate-900 mb-2"><code>register_act.php</code> を編集</h4>
+                    <p class="text-sm text-slate-600 mb-3">ユーザー登録の流れ:</p>
+                    <div class="mermaid">
+flowchart LR
+    A[register.php] -->|POST送信| B[register_act.php]
+    B -->|成功| C[login.php]
+                    </div>
+                    <ul class="text-sm text-slate-700 space-y-1 ml-4 mt-3">
+                        <li>□ パスワードのハッシュ化（php03のhash.phpの41行目付近を見てみよう！）</li>
+                        <li>□ INSERT文を書く</li>
+                    </ul>
+                </div>
+                
+                <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p class="text-sm text-green-800">
+                        <strong>確認方法:</strong> 新規登録 → ログイン画面にリダイレクト → 登録したアカウントでログインできればOK!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 3: 一覧表示（Read） -->
+            <div class="bg-white rounded-lg border border-slate-200 p-6 mb-6">
+                <div class="flex items-center mb-4">
+                    <span class="bg-slate-800 text-white px-3 py-1 rounded-full text-sm font-bold mr-3">Step 3</span>
+                    <h3 class="text-xl font-bold text-slate-900">投稿一覧を表示する（Read）</h3>
+                </div>
+                <div class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p class="text-sm text-amber-800">
+                        <strong>まず最初に:</strong> <code>index.php</code>の<code>exit('ログイン成功！...')</code>の行を削除しよう！
+                    </p>
+                </div>
+                <p class="text-slate-600 mb-4">投稿データをデータベースから取得して表示します。</p>
+                
+                <div class="bg-slate-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-slate-900 mb-2"><code>index.php</code> を編集</h4>
+                    <ul class="text-sm text-slate-700 space-y-1 ml-4">
+                        <li>□ セッション開始</li>
+                        <li>□ SELECT文を作成（JOINの例がファイル内にあります）</li>
+                        <li>□ 自分の投稿かどうかの判定条件を書く</li>
+                    </ul>
+                    <p class="text-xs text-slate-500 mt-3">
+                        ★ <code>sschk()</code> がなかったらどうなる？ちゃんと説明できるようになろう！
+                    </p>
+                </div>
+                
+                <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p class="text-sm text-green-800">
+                        <strong>確認方法:</strong> ログイン後、投稿一覧が表示されればOK!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 4: 新規投稿（Create） -->
+            <div class="bg-white rounded-lg border border-slate-200 p-6 mb-6">
+                <div class="flex items-center mb-4">
+                    <span class="bg-slate-800 text-white px-3 py-1 rounded-full text-sm font-bold mr-3">Step 4</span>
+                    <h3 class="text-xl font-bold text-slate-900">新規投稿機能を作る（Create）</h3>
+                </div>
+                <p class="text-slate-600 mb-4">新しい投稿をデータベースに登録します。</p>
+                
+                <!-- create_act.php の処理フロー -->
+                <div class="bg-slate-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-slate-900 mb-2"><code>create_act.php</code> を編集</h4>
+                    <p class="text-sm text-slate-600 mb-3">新規投稿の流れ:</p>
+                    <div class="mermaid">
+flowchart LR
+    A[index.php] -->|リンク| B[create.php]
+    B -->|POST送信| C[create_act.php]
+    C --> A
+                    </div>
+                    <p class="text-sm text-slate-600 mt-3 mb-2">セッション関連の処理は書いてあるので、SQLだけ書こう！</p>
+                    <ul class="text-sm text-slate-700 space-y-1 ml-4">
+                        <li>□ INSERT文を書く</li>
+                    </ul>
+                </div>
+                
+                <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p class="text-sm text-green-800">
+                        <strong>確認方法:</strong> 新規投稿 → 一覧に表示されればOK!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 5: 編集（Update） -->
+            <div class="bg-white rounded-lg border border-slate-200 p-6 mb-6">
+                <div class="flex items-center mb-4">
+                    <span class="bg-slate-800 text-white px-3 py-1 rounded-full text-sm font-bold mr-3">Step 5</span>
+                    <h3 class="text-xl font-bold text-slate-900">編集機能を作る（Update）</h3>
+                </div>
+                <p class="text-slate-600 mb-4">自分の投稿を編集できるようにします。</p>
+                
+                <!-- update_act.php の処理フロー -->
+                <div class="bg-slate-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-slate-900 mb-2"><code>update_act.php</code> を編集</h4>
+                    <p class="text-sm text-slate-600 mb-3">編集の流れ:</p>
+                    <div class="mermaid">
+flowchart LR
+    A[index.php] -->|編集リンク| B[edit.php]
+    B -->|POST送信| C[update_act.php]
+    C --> A
+                    </div>
+                    <p class="text-sm text-slate-600 mt-3 mb-2">SQLだけ書こう！</p>
+                    <ul class="text-sm text-slate-700 space-y-1 ml-4">
+                        <li>□ UPDATE文を書く（WHERE句で自分の投稿のみに限定）</li>
+                    </ul>
+                </div>
+                
+                <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p class="text-sm text-green-800">
+                        <strong>確認方法:</strong> 自分の投稿の「編集」→ 内容を変更 → 一覧で更新されていればOK!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 6: 削除（Delete） -->
+            <div class="bg-white rounded-lg border border-slate-200 p-6 mb-6">
+                <div class="flex items-center mb-4">
+                    <span class="bg-slate-800 text-white px-3 py-1 rounded-full text-sm font-bold mr-3">Step 6</span>
+                    <h3 class="text-xl font-bold text-slate-900">削除機能を作る（Delete）</h3>
+                </div>
+                <p class="text-slate-600 mb-4">自分の投稿を削除できるようにします。</p>
+                
+                <!-- delete.php の処理フロー -->
+                <div class="bg-slate-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-slate-900 mb-2"><code>delete.php</code> を編集</h4>
+                    <p class="text-sm text-slate-600 mb-3">削除の流れ:</p>
+                    <div class="mermaid">
+flowchart LR
+    A[index.php] -->|削除リンク| B[delete.php]
+    B --> A
+                    </div>
+                    <p class="text-sm text-slate-600 mt-3 mb-2">SQLだけ書こう！</p>
+                    <ul class="text-sm text-slate-700 space-y-1 ml-4">
+                        <li>□ DELETE文を書く（WHERE句で自分の投稿のみに限定）</li>
+                    </ul>
+                </div>
+                
+                <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p class="text-sm text-green-800">
+                        <strong>確認方法:</strong> 自分の投稿の「削除」→ 一覧から消えていればOK!
+                    </p>
+                </div>
+            </div>
+
+            <!-- 完成! -->
+            <div class="bg-slate-800 text-white rounded-lg p-6 text-center">
+                <h3 class="text-xl font-bold mb-2">全Step完了で完成!</h3>
+                <p class="text-slate-300">
+                    ログイン・ログアウト・ユーザー登録・CRUD全ての機能が動作すれば課題完了です。
+                </p>
+            </div>
+        </section>
+
+        <!-- テストアカウント -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 pb-2 border-b-2 border-slate-200">テストアカウント</h2>
+            <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                <p class="text-green-800 mb-4">SQLを実行すると、以下のテストアカウントが作成されます。</p>
+                <div class="bg-white rounded-lg p-4 inline-block">
+                    <p class="text-slate-700">
+                        <strong>Email:</strong> <code>test@example.com</code><br>
+                        <strong>Password:</strong> <code>test123</code>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="bg-slate-100 border-t border-slate-200 py-6">
+        <div class="max-w-4xl mx-auto px-6 text-center text-slate-500 text-sm">
+            <p>PHP課題 掲示板アプリ - CRUD + ログイン機能の学習用</p>
+        </div>
+    </footer>
+
+</body>
+</html>
+

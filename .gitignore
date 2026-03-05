@@ -1,4 +1,4 @@
 secret.txt
-memo.txt
+
 # このように、sexret.txtというファイルを指定すると、githubに上がらなくなる。
 # 一度githubにプッシュしてしまうと、その後に.gitignoreに入れても無視されず上がってしまう。最初から上げる。
